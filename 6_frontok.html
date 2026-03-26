@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <title>6. állomás – Időjárási frontok</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background:#f5f8ff; display:flex; justify-content:center; }
+    .wrapper { max-width: 900px; width: 100%; }
+    h1, h2 { color:#173a6b; }
+    .card { background:white; border-radius:8px; padding:16px; margin-bottom:16px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    .label { font-weight:bold; margin-bottom:4px; }
+    .items { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+    .item { padding:6px 10px; background:#e3ecff; border-radius:4px; cursor:grab; user-select:none; font-size:0.9rem; }
+    .buckets { display:flex; flex-wrap:wrap; gap:10px; }
+    .bucket { flex:1 1 220px; min-height:80px; border:2px dashed #b5c7ff; border-radius:6px; padding:6px; background:#f9fbff; display:flex; flex-direction:column; gap:4px; }
+    .bucket-title { font-weight:bold; margin-bottom:4px; font-size:0.9rem; }
+    .bucket.filled { border-style:solid; background:#f0f4ff; }
+    table { border-collapse:collapse; width:100%; font-size:0.9rem; margin-top:8px; }
+    th, td { border:1px solid #c3d0f0; padding:6px; text-align:center; }
+    th { background:#e3ecff; }
+    select { width:95%; }
+    button { padding:8px 14px; margin-top:10px; border:none; border-radius:4px; background:#173a6b; color:white; cursor:pointer; font-size:0.9rem; }
+    .result { margin-top:8px; font-weight:bold; font-size:0.9rem; }
+    .correct { color:green; }
+    .incorrect { color:#b00020; }
+    svg { width:100%; max-height:70px; }
+
+    /* 3. feladat – külső kép + zónák */
+    .diagram-wrapper { margin-top:10px; background:#fdfdfd; border:1px solid #d0d7e6; border-radius:6px; padding:8px; }
+    .diagram-container { position:relative; max-width:800px; margin:0 auto; }
+    .diagram-bg { width:100%; display:block; border-radius:4px; }
+    .concept-items { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .concept-item { padding:6px 10px; background:#e3ecff; border-radius:4px; cursor:grab; user-select:none; font-size:0.9rem; }
+
+    .concept-zone {
+  position:absolute;
+  min-width:120px;
+  min-height:32px;
+  border:2px dashed #b5c7ff;
+  border-radius:6px;
+  background:rgba(249,251,255,0.9);
+  padding:2px 4px;
+  font-size:0.8rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.zone-placeholder {
+  color:#777;
+  font-style:italic;
+  text-align:center;
+}
+
+  </style>
+</head>
+<body>
+<div class="wrapper">
+<h1>6. állomás – Időjárási frontok</h1>
+<p>Három feladatban gyakorolod a hideg- és melegfront jellemzőit, a frontjelek felismerését és a hozzájuk kapcsolódó időjárást. Ha minden válaszod helyes, megkapod a következő (az első) állomás <strong>linkjét</strong>. És egy jutalmat :)🎼</p>
+
+<!-- 1. feladat: jellemzők hideg/melegfront -->
+<div class="card" id="front-types-card">
+  <h2>1. feladat – Fronttípusok és időjárásuk</h2>
+  <p>Húzd a jellemzőket a megfelelő oszlopba: <strong>hidegfront</strong> vagy <strong>melegfront</strong>!</p>
+  <div class="label">Húzható elemek</div>
+  <div class="items" id="front-pool"></div>
+  <div class="buckets">
+    <div class="bucket" data-type="hideg">
+      <div class="bucket-title">Hidegfront</div>
+    </div>
+    <div class="bucket" data-type="meleg">
+      <div class="bucket-title">Melegfront</div>
+    </div>
+  </div>
+  <button onclick="checkFrontTypes()">Ellenőrzés</button>
+  <div class="result" id="front-result"></div>
+</div>
+
+<!-- 2. feladat: frontjelek felismerése (változatlan) -->
+<div class="card" id="front-symbols-card">
+  <h2>2. feladat – Frontjelek a térképen</h2>
+  <p>Melyik térképi jel melyik frontot jelöli?</p>
+  <table>
+    <tr>
+      <th>Jel a térképen</th>
+      <th>Fronttípus</th>
+    </tr>
+    <tr>
+      <td>
+        <svg viewBox="0 0 200 40" aria-hidden="true">
+          <line x1="10" y1="20" x2="190" y2="20" stroke="#0066cc" stroke-width="3" />
+          <polygon points="35,20 45,10 55,20" fill="#0066cc" />
+          <polygon points="75,20 85,10 95,20" fill="#0066cc" />
+          <polygon points="115,20 125,10 135,20" fill="#0066cc" />
+          <polygon points="155,20 165,10 175,20" fill="#0066cc" />
+        </svg>
+      </td>
+      <td>
+        <select id="type-1">
+          <option value="">-- válassz --</option>
+          <option value="hideg">Hidegfront</option>
+          <option value="meleg">Melegfront</option>
+          <option value="okkluzios">Okklúziós front</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <svg viewBox="0 0 200 40" aria-hidden="true">
+          <line x1="10" y1="22" x2="190" y2="22" stroke="#cc0000" stroke-width="2" />
+          <path d="M160,22 a6,6 0 0 0 -12,0 z" fill="#cc0000" />
+          <path d="M130,22 a6,6 0 0 0 -12,0 z" fill="#cc0000" />
+          <path d="M100,22 a6,6 0 0 0 -12,0 z" fill="#cc0000" />
+          <path d="M70,22  a6,6 0 0 0 -12,0 z" fill="#cc0000" />
+          <path d="M40,22  a6,6 0 0 0 -12,0 z" fill="#cc0000" />
+        </svg>
+      </td>
+      <td>
+        <select id="type-2">
+          <option value="">-- válassz --</option>
+          <option value="hideg">Hidegfront</option>
+          <option value="meleg">Melegfront</option>
+          <option value="okkluzios">Okklúziós front</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <svg viewBox="0 0 200 40" aria-hidden="true">
+          <line x1="10" y1="20" x2="190" y2="20" stroke="#800080" stroke-width="3" />
+          <polygon points="35,20 45,10 55,20" fill="#800080" />
+          <polygon points="115,20 125,10 135,20" fill="#800080" />
+          <path d="M85,20 a6,6 0 0 0 -12,0 z" fill="#800080" />
+          <path d="M155,20 a6,6 0 0 0 -12,0 z" fill="#800080" />
+        </svg>
+      </td>
+      <td>
+        <select id="type-3">
+          <option value="">-- válassz --</option>
+          <option value="hideg">Hidegfront</option>
+          <option value="meleg">Melegfront</option>
+          <option value="okkluzios">Okklúziós front</option>
+        </select>
+      </td>
+    </tr>
+  </table>
+
+  <button onclick="checkFrontSymbols()">Ellenőrzés</button>
+  <div class="result" id="symbols-result"></div>
+</div>
+
+<!-- 3. feladat: külső kép + üres célmezők -->
+<!-- 3. feladat: külső kép + üres célmezők -->
+<div class="card" id="front-diagram-card">
+  <h2>3. feladat – Hideg és melegfront időjárása</h2>
+  <p>Nézd meg az ábrát, majd húzd a fogalmakat a megfelelő helyekre a képen!</p>
+
+  <div class="diagram-wrapper">
+    <div class="diagram-container">
+      <!-- fontos: itt jelenik meg a kép -->
+      <img src="frontok.jpg" alt="Hideg- és melegfront ábrája" class="diagram-bg">
+
+      <!-- zónák a kép fölött, segítő felirattal -->
+      <div class="concept-zone" data-role="cold" style="top:25%; left:0%;">
+        <span class="zone-placeholder">... levegő</span>
+      </div>
+      <div class="concept-zone" data-role="meleg-kozep" style="top:25%; left:45%;">
+        <span class="zone-placeholder">... levegő</span>
+      </div>
+      <div class="concept-zone" data-role="cold" style="top:55%; left:85%;">
+        <span class="zone-placeholder">... levegő</span>
+      </div>
+      <div class="concept-zone" data-role="zivatar" style="top:85%; left:25%;">
+        <span class="zone-placeholder">csapadék</span>
+      </div>
+      <div class="concept-zone" data-role="csendes-eso" style="top:85%; left:60%;">
+        <span class="zone-placeholder">csapadék</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="label">Húzható fogalmak</div>
+  <div class="concept-items" id="concept-pool"></div>
+
+  <button onclick="checkConcepts()">Ellenőrzés</button>
+  <div class="result" id="concept-result"></div>
+</div>
+
+<div class="card" id="next-card">
+  <h2>Következő állomás</h2>
+  <p></p>
+  <div class="result" id="next-link"></div>
+  <div class="result" id="spotify-code"></div>
+</div>
+
+<div class="card" id="reward-card">
+  <h2>Jutalom</h2>
+  <p></p>
+  <div class="result" id="reward-link"></div>
+</div>
+
+</div>
+
+<script>
+let dragged = null;
+
+const frontItems = [
+  {key: 'cold_under', text: 'Hideg levegő nyomul az enyhébb levegő alá.', type: 'hideg'},
+  {key: 'warm_over', text: 'Melegebb levegő siklik a hidegebb fölé.', type: 'meleg'},
+  {key: 'rapid_cool', text: 'Gyors hőmérséklet-csökkenés.', type: 'hideg'},
+  {key: 'slow_warm', text: 'Lassan bekövetkező felmelegedés.', type: 'meleg'},
+  {key: 'showers', text: 'Záporok, zivatarok, erős szél, hirtelen lehűlés.', type: 'hideg'},
+  {key: 'steady_rain', text: 'Kiterjedt, tartós eső, felhős, borult ég.', type: 'meleg'},
+  {key: 'sharp', text: 'Éles, meredek frontvonal.', type: 'hideg'},
+  {key: 'gentle', text: 'Laposabb frontfelület, elhúzódó csapadék.', type: 'meleg'}
+];
+
+const frontOptions = [
+  { value: 'hideg',     label: 'Hidegfront' },
+  { value: 'meleg',     label: 'Melegfront' },
+  { value: 'okkluzios', label: 'Okklúziós front' }
+];
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+function createItem(text, key, className) {
+  const div = document.createElement('div');
+  div.className = className;
+  div.textContent = text;
+  div.draggable = true;
+  div.dataset.key = key;
+  div.addEventListener('dragstart', e => {
+    dragged = div;
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  return div;
+}
+
+function setupFrontItems() {
+  const pool = document.getElementById('front-pool');
+  const arr = frontItems.slice();
+  shuffle(arr);
+  pool.innerHTML = '';
+  arr.forEach(obj => pool.appendChild(createItem(obj.text, obj.key, 'item')));
+}
+
+function setupFrontSelects() {
+  ['type-1', 'type-2', 'type-3'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+
+    // alap törlése
+    sel.innerHTML = '';
+
+    // első, fix üres opció
+    const emptyOpt = document.createElement('option');
+    emptyOpt.value = '';
+    emptyOpt.textContent = '-- válassz --';
+    sel.appendChild(emptyOpt);
+
+    // opciók megkeverése
+    const opts = frontOptions.slice();
+    shuffle(opts);
+
+    // kevert opciók hozzáadása
+    opts.forEach(o => {
+      const opt = document.createElement('option');
+      opt.value = o.value;
+      opt.textContent = o.label;
+      sel.appendChild(opt);
+    });
+  });
+}
+
+function addDnD() {
+  document.querySelectorAll('.bucket').forEach(zone => {
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+    });
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!dragged) return;
+      zone.appendChild(dragged);
+      zone.classList.add('filled');
+      dragged = null;
+    });
+  });
+
+ 
+  // 3. feladat zónái + pool mint drop-zóna
+  const conceptPool = document.getElementById('concept-pool');
+
+  document.querySelectorAll('.concept-zone').forEach(zone => {
+    zone.addEventListener('dragover', e => e.preventDefault());
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!dragged) return;
+
+      // ha már van benne fogalom, dobjuk vissza a poolba
+      const existing = zone.querySelector('.concept-item');
+      if (existing) {
+        conceptPool.appendChild(existing);
+      }
+
+      zone.appendChild(dragged);
+      dragged = null;
+
+      // placeholder-ek frissítése
+      refreshPlaceholders();
+    });
+  });
+
+  conceptPool.addEventListener('dragover', e => e.preventDefault());
+  conceptPool.addEventListener('drop', e => {
+    e.preventDefault();
+    if (!dragged) return;
+    conceptPool.appendChild(dragged);
+    dragged = null;
+
+    // placeholder-ek frissítése
+    refreshPlaceholders();
+  });
+}
+
+function checkFrontTypes() {
+  const res = document.getElementById('front-result');
+
+  // Először: maradt-e elem a kiinduló helyen?
+  const pool = document.getElementById('front-pool');
+  const remaining = pool.querySelectorAll('.item').length;
+  if (remaining > 0) {
+    res.textContent = 'Először pakold be az összes jellemzőt valamelyik fronttípushoz, utána tudom ellenőrizni.';
+    res.className = 'result incorrect';
+    return;
+  }
+
+  // INNENTŐL a régi logika
+  let correct = 0;
+  const map = {};
+  frontItems.forEach(f => { map[f.key] = f.type; });
+  const total = frontItems.length;
+
+  document.querySelectorAll('#front-types-card .bucket').forEach(bucket => {
+    const type = bucket.dataset.type;
+    bucket.querySelectorAll('.item').forEach(it => {
+      const key = it.dataset.key;
+      if (map[key] === type) correct++;
+    });
+  });
+
+  if (correct === total) {
+    res.textContent = 'Minden jellemzőt jó fronttípushoz kapcsoltál! (' + correct + '/' + total + ')';
+    res.className = 'result correct';
+  } else {
+    res.textContent = 'Jelenleg ' + correct + '/' + total + ' jellemző van jó helyen. Gondold át még egyszer!';
+    res.className = 'result incorrect';
+  }
+  updateFinalCode();
+}
+
+function checkFrontSymbols() {
+  const res = document.getElementById('symbols-result');
+
+  const s1 = document.getElementById('type-1');
+  const s2 = document.getElementById('type-2');
+  const s3 = document.getElementById('type-3');
+
+  // Először: mindháromnál van-e választás?
+  if (!s1.value || !s2.value || !s3.value) {
+    res.textContent = 'Először mindhárom frontjelhez válassz típust, utána tudom ellenőrizni.';
+    res.className = 'result incorrect';
+    return;
+  }
+
+  // INNENTŐL a régi logika
+  let correct = 0;
+  const totalSelect = 3;
+
+  if (s1.value === 'hideg')     correct++;
+  if (s2.value === 'meleg')     correct++;
+  if (s3.value === 'okkluzios') correct++;
+
+  if (correct === totalSelect) {
+    res.textContent = 'Minden frontjelet jól azonosítottál! (' + correct + '/' + totalSelect + ')';
+    res.className = 'result correct';
+  } else {
+    res.textContent = 'Jelenleg ' + correct + '/' + totalSelect + ' frontjelet azonosítottál helyesen. Próbáld javítani!';
+    res.className = 'result incorrect';
+  }
+  updateFinalCode();
+}
+
+// 3. feladat – fogalmak
+const conceptItems = [
+  {key: 'hideg1', text: 'Hideg levegő', role: 'cold'},
+  {key: 'hideg2', text: 'Hideg levegő', role: 'cold'},
+  {key: 'meleg-levego', text: 'Meleg levegő', role: 'meleg-kozep'},
+  {key: 'zivatar', text: 'Zápor, zivatar', role: 'zivatar'},
+  {key: 'csendes-eso', text: 'Csendes eső', role: 'csendes-eso'}
+];
+
+function setupConceptItems() {
+  const pool = document.getElementById('concept-pool');
+  const arr = conceptItems.slice();
+  shuffle(arr);
+  pool.innerHTML = '';
+  arr.forEach(obj => pool.appendChild(createItem(obj.text, obj.key, 'concept-item')));
+}
+
+function checkConcepts() {
+  const res = document.getElementById('concept-result');
+
+  // Először: maradt-e fogalom a kiinduló helyen?
+  const pool = document.getElementById('concept-pool');
+  const remaining = pool.querySelectorAll('.concept-item').length;
+  if (remaining > 0) {
+    res.textContent = 'Először húzd be az összes fogalmat valamelyik helyre a képen, utána tudom ellenőrizni.';
+    res.className = 'result incorrect';
+    return;
+  }
+
+  // INNENTŐL a régi logika
+  let correct = 0;
+  const total = conceptItems.length;
+  const roleMap = {};
+  conceptItems.forEach(c => { roleMap[c.key] = c.role; });
+
+  document.querySelectorAll('.concept-zone').forEach(zone => {
+    const roleNeeded = zone.dataset.role;
+    zone.querySelectorAll('.concept-item').forEach(it => {
+      const key = it.dataset.key;
+      if (roleMap[key] === roleNeeded) correct++;
+    });
+  });
+
+  if (correct === total) {
+    res.textContent = 'Minden fogalmat jó helyre húztál az ábrán! (' + correct + '/' + total + ')';
+    res.className = 'result correct';
+  } else {
+    res.textContent = 'Jelenleg ' + correct + '/' + total + ' fogalom van jó helyen. Gondold át még egyszer!';
+    res.className = 'result incorrect';
+  }
+  updateFinalCode();
+}
+
+function updateFinalCode() {
+  const next   = document.getElementById('next-link');
+  const spot   = document.getElementById('spotify-code');
+  const reward = document.getElementById('reward-link');
+
+  const good1 = document.getElementById('front-result').classList.contains('correct');
+  const good2 = document.getElementById('symbols-result').classList.contains('correct');
+  const good3 = document.getElementById('concept-result').classList.contains('correct');
+
+  const allGood = good1 && good2 && good3;
+
+  if (allGood) {
+    if (next) {
+      next.innerHTML = '<a href="1_szerkezet.html">1. állomás – Légkör alkotói és szerkezete</a>';
+    }
+    if (spot) {
+      spot.textContent = '';
+    }
+    if (reward) {
+      reward.innerHTML =
+        'Kérlek ne órán hallgasd. 🎵 🎧 🎹 ' +
+        '<a href="https://open.spotify.com/playlist/1y8JaEYEKxAeytAjqYN9rS?si=UWiUqf5-SquDti7Jnx2-Aw" target="_blank">' +
+          '<img src="spotify.jpg" alt="Spotify levegő gyűjtemény" style="width:120px; height:auto;">' +
+        '</a>';
+    }
+  } else {
+    if (next)   next.textContent   = '';
+    if (spot)   spot.textContent   = '';
+    if (reward) reward.textContent = '';
+  }
+}
+
+function refreshPlaceholders() {
+  document.querySelectorAll('.concept-zone').forEach(zone => {
+    const placeholder = zone.querySelector('.zone-placeholder');
+    if (!placeholder) return;
+    const hasItem = zone.querySelector('.concept-item');
+    placeholder.style.display = hasItem ? 'none' : 'inline';
+  });
+}
+
+window.addEventListener('load', () => {
+  setupFrontItems();
+  setupConceptItems();
+  addDnD();
+  refreshPlaceholders();
+  setupFrontSelects();   // ÚJ SOR
+});
+
+</script>
+
+<script src="DragDropTouch.js"></script>
+
+</body>
+</html>

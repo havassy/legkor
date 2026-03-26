@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <title>2. állomás – Levegő felmelegedése és üvegházhatás</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background:#f5f8ff; display:flex; justify-content:center; }
+    .wrapper { max-width: 780px; width: 100%; }
+    h1, h2 { color:#173a6b; }
+    .card { background:white; border-radius:8px; padding:16px; margin-bottom:16px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    .label { font-weight:bold; margin-bottom:4px; }
+    .items { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+    .item { padding:6px 10px; background:#e3ecff; border-radius:4px; cursor:grab; user-select:none; font-size:0.9rem; }
+    .buckets { display:flex; flex-wrap:wrap; gap:10px; }
+    .bucket {
+      flex:1 1 220px;
+      min-height:80px;
+      border:2px dashed #b5c7ff;
+      border-radius:6px;
+      padding:6px;
+      background:#f9fbff;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .bucket-title { font-weight:bold; margin-bottom:4px; font-size:0.9rem; }
+    .bucket.filled { border-style:solid; background:#f0f4ff; }
+    button { padding:8px 14px; margin-top:10px; border:none; border-radius:4px; background:#173a6b; color:white; cursor:pointer; font-size:0.9rem; }
+    .result { margin-top:8px; font-weight:bold; font-size:0.9rem; }
+    .correct { color:green; }
+    .incorrect { color:#b00020; }
+    .sequence { display:flex; flex-direction:column; gap:8px; }
+    .seq-slot { min-height:40px; border:2px dashed #b5c7ff; border-radius:6px; padding:4px 6px; background:#f9fbff; font-size:0.9rem; display:flex; align-items:center; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+<h1>2. állomás – Levegő felmelegedése és üvegházhatás</h1>
+<p>Válaszolj a felmelegedéssel és az üvegházhatással kapcsolatos kérdésekre! Ha minden válaszod helyes, megkapod a következő állomás <strong>linkjét</strong>.</p>
+
+<div class="card" id="heat-factors-card">
+  <h2>1. feladat – Mitől melegszik jobban a felszín?</h2>
+  <p>Húzd az állításokat a megfelelő kosárba: <strong>erősebb</strong> vagy <strong>gyengébb</strong> felmelegedést okoznak általában!</p>
+  <div class="label">Húzható elemek</div>
+  <div class="items" id="factor-pool"></div>
+  <div class="buckets">
+    <div class="bucket" data-type="strong">
+      <div class="bucket-title">Erősebb felmelegedést okoz</div>
+    </div>
+    <div class="bucket" data-type="weak">
+      <div class="bucket-title">Gyengébb felmelegedést okoz</div>
+    </div>
+  </div>
+  <button onclick="checkFactors()">Ellenőrzés</button>
+  <div class="result" id="factors-result"></div>
+</div>
+
+<div class="card" id="gh-steps-card">
+  <h2>2. feladat – Az üvegházhatás lépései</h2>
+  <p>Rendezd sorrendbe az üvegházhatás fő lépéseit! Az 1. helyre kerüljön, ami legelőször történik.</p>
+  <div class="label">Húzható elemek</div>
+  <div class="items" id="step-pool"></div>
+  <div class="label" style="margin-top:8px;">Lépések sorrendben</div>
+  <div class="sequence" id="step-slots">
+    <div class="seq-slot" data-pos="1">1.</div>
+    <div class="seq-slot" data-pos="2">2.</div>
+    <div class="seq-slot" data-pos="3">3.</div>
+    <div class="seq-slot" data-pos="4">4.</div>
+    <div class="seq-slot" data-pos="5">5.</div>
+    <div class="seq-slot" data-pos="6">6.</div>
+  </div>
+  <button onclick="checkSteps()">Ellenőrzés</button>
+  <div class="result" id="steps-result"></div>
+</div>
+
+<div class="card" id="gh-good-bad-card">
+  <h2>3. feladat – Jó vagy rossz dolog az üvegházhatás?</h2>
+  <p>Válogasd szét, mely állítások tartoznak a <strong>természetes, szükséges üvegházhatáshoz</strong>, és melyek a <strong>fokozott, emberi eredetű üvegházhatás</strong> következményei!</p>
+  <div class="label">Húzható elemek</div>
+  <div class="items" id="gh-pool"></div>
+  <div class="buckets">
+    <div class="bucket" data-type="natural">
+      <div class="bucket-title">Szükséges, természetes üvegházhatás</div>
+    </div>
+    <div class="bucket" data-type="enhanced">
+      <div class="bucket-title">Fokozott, emberi eredetű üvegházhatás következménye</div>
+    </div>
+  </div>
+  <button onclick="checkGH()">Ellenőrzés</button>
+  <div class="result" id="gh-result"></div>
+</div>
+
+<div class="card" id="next-card">
+  <h2>Következő állomás</h2>
+  <p></p>
+  <div class="result" id="next-link"></div>
+  <div class="result" id="spotify-code"></div>
+</div>
+
+</div>
+
+<script>
+let dragged = null;
+
+// 1. feladat – felmelegedést befolyásoló tényezők
+const factorItems = [
+  {key: 'dark_city', text: 'Sötét színű burkolat (aszfalt, tetők)', bucket: 'strong'},
+  {key: 'fresh_snow', text: 'Friss, fehér hótakaró', bucket: 'weak'},
+  {key: 'sea', text: 'Óceán, tenger felszíne', bucket: 'weak'},
+  {key: 'mountain', text: 'Magashegység (nagy tengerszint feletti magasság)', bucket: 'weak'},
+  {key: 'tropic', text: 'Alacsony földrajzi szélesség', bucket: 'strong'},
+  {key: 'high_sun', text: 'Magas napállás (napsugarak hajlássöge nagy)', bucket: 'strong'},
+  {key: 'low_sun', text: 'Alacsony napállás (napsugarak hajlásszöge kicsi)', bucket: 'weak'},
+  {key: 'cloudy', text: 'Borult ég, vastag felhőzet nappal', bucket: 'weak'},
+  {key: 'clear', text: 'Derült, felhőtlen ég nappal', bucket: 'strong'}  
+];
+
+// 2. feladat – üvegházhatás lépései
+const stepItems = [
+  {key: 'step1', text: 'A Nap rövidhullámú sugárzása áthalad a légkörön és eléri a felszínt.', pos: 1},
+  {key: 'step2', text: 'A felszín elnyeli a sugárzást és felmelegszik.', pos: 2},
+  {key: 'step3', text: 'A felmelegedett felszín hosszúhullámú hősugárzást bocsát ki.', pos: 3},
+  {key: 'step4', text: 'Az üvegházgázok elnyelik a hosszúhullámú sugárzás egy részét.', pos: 4},
+  {key: 'step5', text: 'A felmelegedett légkör a hőt visszasugározza a felszín felé.', pos: 5},
+  {key: 'step6', text: 'A felszín és az alsó légrétegek melegebbek, mintha nem lenne üvegházhatás.', pos: 6}
+];
+
+// 3. feladat – jó vagy rossz üvegházhatás
+const ghItems = [
+  {key: '15c', text: 'A Föld átlaghőmérséklete kb. +15 °C.', type: 'natural'},
+  {key: 'liquid_water', text: 'Folyékony víz található a felszínen.', type: 'natural'},
+  {key: 'ice_ages', text: 'Hosszú idő alatt jégkorszakok és melegebb időszakok váltakoznak.', type: 'natural'},
+  {key: 'rapid_warming', text: 'Gyors globális melegedés néhány évtized alatt.', type: 'enhanced'},
+  {key: 'sea_level', text: 'Tengerszint‑emelkedés az óceánok felmelegedése és jégtömegek olvadása miatt.', type: 'enhanced'},
+  {key: 'extremes', text: 'Szélsőséges időjárási események (hőhullámok, árvizek) gyakoribbá válnak.', type: 'enhanced'},
+  {key: 'co2_fossil', text: 'CO₂‑kibocsátás fosszilis tüzelőanyagok égetéséből.', type: 'enhanced'}
+];
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+function createDraggable(text, key) {
+  const div = document.createElement('div');
+  div.className = 'item';
+  div.textContent = text;
+  div.draggable = true;
+  div.dataset.key = key;
+  div.addEventListener('dragstart', e => {
+    dragged = div;
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  return div;
+}
+
+function setupFactors() {
+  const pool = document.getElementById('factor-pool');
+  const arr = factorItems.slice();
+  shuffle(arr);
+  pool.innerHTML = '';
+  arr.forEach(obj => {
+    pool.appendChild(createDraggable(obj.text, obj.key));
+  });
+}
+
+function setupSteps() {
+  const pool = document.getElementById('step-pool');
+  const arr = stepItems.slice();
+  shuffle(arr);
+  pool.innerHTML = '';
+  arr.forEach(obj => {
+    pool.appendChild(createDraggable(obj.text, obj.key));
+  });
+}
+
+function setupGH() {
+  const pool = document.getElementById('gh-pool');
+  const arr = ghItems.slice();
+  shuffle(arr);
+  pool.innerHTML = '';
+  arr.forEach(obj => {
+    pool.appendChild(createDraggable(obj.text, obj.key));
+  });
+}
+
+function addDnD() {
+  document.querySelectorAll('.bucket, .seq-slot').forEach(zone => {
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+    });
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!dragged) return;
+
+      // sorrend-slot: itt csak 1 elem lehet
+      if (zone.classList.contains('seq-slot')) {
+        const existing = zone.querySelector('.item');
+        if (existing) {
+          document.getElementById('step-pool').appendChild(existing);
+        }
+        zone.appendChild(dragged);
+      }
+      // kosarak: tetszőleges számú elem fér bele
+      else if (zone.classList.contains('bucket')) {
+        zone.appendChild(dragged);
+      }
+
+      zone.classList.add('filled');
+      dragged = null;
+    });
+  });
+}
+
+function checkFactors() {
+  const res = document.getElementById('factors-result');
+
+  // először: minden elem el van-e helyezve valamelyik kosárba?
+  const pool = document.getElementById('factor-pool');
+  const remaining = pool.querySelectorAll('.item').length;
+  if (remaining > 0) {
+    res.textContent = 'Először pakold be az összes tényezőt valamelyik kosárba, utána tudom ellenőrizni.';
+    res.className = 'result incorrect';
+    return;
+  }
+
+  // INNENTŐL a régi logika
+  let correct = 0;
+  const total = factorItems.length;
+  const map = {};
+  factorItems.forEach(f => { map[f.key] = f.bucket; });
+  document.querySelectorAll('#heat-factors-card .bucket').forEach(bucket => {
+    const type = bucket.dataset.type;
+    bucket.querySelectorAll('.item').forEach(it => {
+      const key = it.dataset.key;
+      if (map[key] === type) correct++;
+    });
+  });
+
+  if (correct === total) {
+    res.textContent = 'Minden tényezőt jó kosárba raktál! (' + correct + '/' + total + ')';
+    res.className = 'result correct';
+  } else {
+    res.textContent = 'Jelenleg ' + correct + '/' + total + ' tényező van a megfelelő kosárban. Gondold át újra!';
+    res.className = 'result incorrect';
+  }
+  updateFinalCode();
+}
+
+function checkSteps() {
+  const res = document.getElementById('steps-result');
+
+  // minden lépés kint van-e már a sorrendi helyeken (nem maradt-e a poolban)?
+  const pool = document.getElementById('step-pool');
+  const remaining = pool.querySelectorAll('.item').length;
+  if (remaining > 0) {
+    res.textContent = 'Először húzd be az összes lépést valamelyik sorszámhoz, utána tudom ellenőrizni.';
+    res.className = 'result incorrect';
+    return;
+  }
+
+  // INNENTŐL a régi logika
+  let correct = 0;
+  const posMap = {};
+  stepItems.forEach(s => { posMap[s.key] = s.pos; });
+  const slots = document.querySelectorAll('#step-slots .seq-slot');
+  slots.forEach(slot => {
+    const item = slot.querySelector('.item');
+    if (!item) return;
+    const key = item.dataset.key;
+    const shouldPos = posMap[key];
+    const thisPos = parseInt(slot.dataset.pos, 10);
+    if (shouldPos === thisPos) correct++;
+  });
+  const total = stepItems.length;
+
+  if (correct === total) {
+    res.textContent = 'Az üvegházhatás lépéseit helyes sorrendbe raktad! (' + correct + '/' + total + ')';
+    res.className = 'result correct';
+  } else {
+    res.textContent = 'Jelenleg ' + correct + '/' + total + ' lépés van jó helyen. Próbáld javítani!';
+    res.className = 'result incorrect';
+  }
+  updateFinalCode();
+}
+
+function checkGH() {
+  const res = document.getElementById('gh-result');
+
+  // először: az összes állítást elhelyezték-e valamelyik oszlopban?
+  const pool = document.getElementById('gh-pool');
+  const remaining = pool.querySelectorAll('.item').length;
+  if (remaining > 0) {
+    res.textContent = 'Először pakold be az összes állítást valamelyik oszlopba, utána tudom ellenőrizni.';
+    res.className = 'result incorrect';
+    return;
+  }
+
+  // INNENTŐL a régi logika
+  let correct = 0;
+  const map = {};
+  ghItems.forEach(g => { map[g.key] = g.type; });
+  const total = ghItems.length;
+
+  document.querySelectorAll('#gh-good-bad-card .bucket').forEach(bucket => {
+    const type = bucket.dataset.type;
+    bucket.querySelectorAll('.item').forEach(it => {
+      const key = it.dataset.key;
+      if (map[key] === type) correct++;
+    });
+  });
+
+  if (correct === total) {
+    res.textContent = 'Minden állítást jó oszlopba raktál! (' + correct + '/' + total + ')';
+    res.className = 'result correct';
+  } else {
+    res.textContent = 'Jelenleg ' + correct + '/' + total + ' állítás van jó helyen. Gondold át újra!';
+    res.className = 'result incorrect';
+  }
+  updateFinalCode();
+}
+
+function updateFinalCode() {
+  const next = document.getElementById('next-link');
+  const spot = document.getElementById('spotify-code');
+
+  const good1 = document.getElementById('factors-result').classList.contains('correct');
+  const good2 = document.getElementById('steps-result').classList.contains('correct');
+  const good3 = document.getElementById('gh-result').classList.contains('correct');
+
+  const allGood = good1 && good2 && good3;
+
+  if (allGood) {
+    if (next) {
+      next.innerHTML = '<a href="3_szelek.html">3. állomás – Globális szelek</a>';
+    }
+    if (spot) {
+      // Alapból ne írjon ki semmit:
+      spot.textContent = '';
+      // Ha később szeretnél kódot, IDE fogsz beírni valamit, pl.:
+      // spot.textContent = 'Kód: IDE_IRHATOD_A_2._ÁLLOMÁS_ZENE_KÓDJÁT';
+    }
+  } else {
+    if (next) next.textContent = '';
+    if (spot) spot.textContent = '';
+  }
+}
+
+window.addEventListener('load', () => {
+  setupFactors();
+  setupSteps();
+  setupGH();
+  addDnD();
+});
+</script>
+
+<script src="DragDropTouch.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <title>Légkör – 1. állomás</title>
+
+  <!-- Rövid leírás – ehhez az oldalhoz igazítva -->
+  <meta name="description" content="Légkör feladat, 1. állomás.">
+
+  <!-- Mobilbarát nézet -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- OPEN GRAPH -->
+  <meta property="og:title" content="Légkör – 1. állomás">
+  <meta property="og:description" content="Légkör feladat, 1. állomás">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://diak.budai-rfg.hu/~havassy/legkor">
+  <meta property="og:image" content="https://diak.budai-rfg.hu/~havassy/legkor/frontok.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- TWITTER / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Légkör – 1. állomás">
+  <meta name="twitter:description" content="Légkör feladat, 1. állomás.">
+  <meta name="twitter:image" content="https://diak.budai-rfg.hu/~havassy/legkor/frontok.jpg">
+
+  <!-- SAJÁT STÍLUSOK / SCRIPTJEK -->
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background:#f5f8ff; display:flex; justify-content:center; }
+    .wrapper { max-width: 720px; width: 100%; }
+    h1, h2 { color:#173a6b; }
+    .card { background:white; border-radius:8px; padding:16px; margin-bottom:16px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    .layers { display:flex; gap:8px; flex-wrap:wrap; }
+    .item { padding:6px 10px; background:#e3ecff; border-radius:4px; cursor:grab; user-select:none; font-size:0.9rem; }
+    .dropzone-col { display:flex; flex-direction:column; gap:8px; }
+    .dropzone { min-height:40px; border:2px dashed #b5c7ff; border-radius:6px; padding:4px 6px; display:flex; align-items:center; justify-content:center; font-size:0.9rem; background:#f9fbff; }
+    .dropzone.filled { border-style:solid; background:#f0f4ff; }
+    .label { font-weight:bold; margin-bottom:4px; }
+    button { padding:8px 14px; margin-top:10px; border:none; border-radius:4px; background:#173a6b; color:white; cursor:pointer; font-size:0.9rem; }
+    .result { margin-top:8px; font-weight:bold; font-size:0.9rem; }
+    .correct { color:green; }
+    .incorrect { color:#b00020; }
+    .question { margin-bottom:10px; font-size:0.9rem; }
+    input[type=number] { width:80px; }
+    .sum-indicator { font-weight:bold; }
+    .sum-ok { color:#173a6b; }
+    .sum-high { color:#b00020; }
+    select { max-width: 260px; }
+  </style>
+
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+
+<body>
+<div class="wrapper">
+<h1>1. állomás – Légkör alkotói és szerkezete</h1>
+<p>Rendezd sorba a légköri rétegeket, írd be a gázok arányát, majd válaszolj a kérdésekre! Ha minden válaszod helyes, megkapod a következő állomás <strong>linkjét</strong>.</p>
+
+<div class="card" id="layers-card">
+  <h2>1. feladat – Légköri rétegek sorrendje</h2>
+  <p>Húzd a rétegek nevét a megfelelő helyre! (A dobozokban a réteg felső határának magassága látszik.)</p>
+  <div class="label">Húzható elemek</div>
+  <div class="layers" id="layer-pool">
+    <div class="item" draggable="true" data-name="troposzféra">Troposzféra</div>
+    <div class="item" draggable="true" data-name="sztratoszféra">Sztratoszféra</div>
+    <div class="item" draggable="true" data-name="mezoszféra">Mezoszféra</div>
+    <div class="item" draggable="true" data-name="termoszféra">Termoszféra</div>
+    <div class="item" draggable="true" data-name="exoszféra">Exoszféra</div>
+  </div>
+  <div class="label" style="margin-top:10px;">Rétegek alulról felfelé</div>
+  <div class="dropzone-col">
+    <div class="dropzone" data-correct="exoszféra">&gt; 500 km</div>
+    <div class="dropzone" data-correct="termoszféra">≈ 500 km-ig</div>
+    <div class="dropzone" data-correct="mezoszféra">≈ 80 km-ig</div>
+    <div class="dropzone" data-correct="sztratoszféra">≈ 50 km-ig</div>
+    <div class="dropzone" data-correct="troposzféra"> felszíntől ≈ 12 km-ig</div>
+  </div>
+  <button onclick="checkLayers()">Ellenőrzés</button>
+  <div class="result" id="layers-result"></div>
+</div>
+
+<div class="card" id="gases-card">
+  <h2>2. feladat – Légköri gázok aránya</h2>
+  <p>Írd be a légköri gázok térfogat‑százalékát! Az összeg legyen kb. 100%. Pontos, van ahol tört érték szükséges!</p>
+  <div class="question">Nitrogén (N₂): <input type="number" id="n2" step="0.1" /> %</div>
+  <div class="question">Oxigén (O₂): <input type="number" id="o2" step="0.1" /> %</div>
+  <div class="question">Argon (Ar): <input type="number" id="ar" step="0.1" /> %</div>
+  <div class="question">Szén‑dioxid (CO₂): <input type="number" id="co2" step="0.01" /> %</div>
+  <div class="question sum-indicator" id="sum-indicator">Összesen: 0 %</div>
+  <button onclick="checkGases()">Ellenőrzés</button>
+  <div class="result" id="gases-result"></div>
+</div>
+
+<div class="card" id="quiz-card">
+  <h2>3. feladat – Melyik réteg jellemzője?</h2>
+  <p>Válaszd ki, melyik légköri réteghez tartozik az állítás!</p>
+  <div id="quiz-questions"></div>
+  <button onclick="checkQuiz()">Ellenőrzés</button>
+  <div class="result" id="quiz-result"></div>
+</div>
+
+
+<div class="card" id="next-card">
+  <h2 id="next-title">Következő állomás</h2>
+  <div class="result" id="next-link"></div>
+  <div class="result" id="spotify-code"></div>
+</div>
+
+</div>
+
+<script>
+let dragged = null;
+
+const quizData = [
+  {id: 'q1', text: 'Itt zajlik az időjárás döntő része, a felhők többsége itt található.', answer: 'Troposzféra'},
+  {id: 'q2', text: 'Itt helyezkedik el az ózonréteg, amely elnyeli az UV-sugárzás nagy részét.', answer: 'Sztratoszféra'},
+  {id: 'q3', text: 'Itt égnek el a Föld légkörébe belépő kisebb meteoroidok (hullócsillagok).', answer: 'Mezoszféra'},
+  {id: 'q4', text: 'Itt található a sarki fény (aurora), és nagyon ritka, de forró a levegő.', answer: 'Termoszféra'}
+];
+
+// Helyes sorrend alulról felfelé (a data-name értékei alapján)
+const correctLayerOrder = [
+  'troposzféra',
+  'sztratoszféra',
+  'mezoszféra',
+  'termoszféra',
+  'exoszféra'
+];
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+// 1. feladat: húzható rétegek induló sorrendjének randomizálása, de sosem helyes tankönyvi sorrendben
+function initLayerPoolOrder() {
+  const pool = document.getElementById('layer-pool');
+  if (!pool) return;
+
+  const items = Array.from(pool.querySelectorAll('.item'));
+  let order = items.map(el => el.dataset.name);
+
+  // Addig keverünk, amíg nem pont a helyes sorrendet kapjuk (alulról felfelé)
+  do {
+    shuffle(order);
+  } while (order.every((name, idx) => name === correctLayerOrder[idx]));
+
+  pool.innerHTML = '';
+  order.forEach(name => {
+    const el = items.find(x => x.dataset.name === name);
+    if (el) pool.appendChild(el);
+  });
+}
+
+function renderQuiz() {
+  const container = document.getElementById('quiz-questions');
+  const arr = quizData.slice();
+  shuffle(arr);
+  container.innerHTML = '';
+  arr.forEach((q, index) => {
+    const num = index + 1;
+    const div = document.createElement('div');
+    div.className = 'question';
+    div.innerHTML = num + ') ' + q.text + '<br />' +
+      '<select id="' + q.id + '">' +
+      '<option value="">-- válassz --</option>' +
+      '<option>Troposzféra</option>' +
+      '<option>Sztratoszféra</option>' +
+      '<option>Mezoszféra</option>' +
+      '<option>Termoszféra</option>' +
+      '<option>Exoszféra</option>' +
+      '</select>';
+    container.appendChild(div);
+  });
+}
+
+function addDnD() {
+  document.querySelectorAll('.item').forEach(el => {
+    el.addEventListener('dragstart', e => {
+      dragged = el;
+      e.dataTransfer.effectAllowed = 'move';
+    });
+  });
+  document.querySelectorAll('.dropzone').forEach(dz => {
+    dz.addEventListener('dragover', e => {
+      e.preventDefault();
+    });
+    dz.addEventListener('drop', e => {
+      e.preventDefault();
+      if (dragged) {
+        if (dz.querySelector('.item')) {
+          const existing = dz.querySelector('.item');
+          document.getElementById('layer-pool').appendChild(existing);
+        }
+        dz.textContent = '';
+        dz.appendChild(dragged);
+        dz.classList.add('filled');
+        dragged = null;
+      }
+    });
+  });
+}
+
+function checkLayers() {
+  const zones = document.querySelectorAll('.dropzone');
+  // van‑e üres zóna?
+  let allFilled = true;
+  zones.forEach(z => {
+    if (!z.querySelector('.item')) {
+      allFilled = false;
+    }
+  });
+
+  const res = document.getElementById('layers-result');
+  if (!allFilled) {
+    res.textContent = 'Először mindegyik rétegnevet húzd be egy dobozba, utána tudom ellenőrizni.';
+    res.className = 'result incorrect';
+    return; // NINCS továbbértékelés
+  }
+
+  // INNENTŐL marad a régi logika
+  let correct = 0;
+  zones.forEach(z => {
+    const child = z.querySelector('.item');
+    if (child && child.dataset.name === z.dataset.correct) {
+      correct++;
+    }
+  });
+  if (correct === zones.length) {
+    res.textContent = 'Minden réteg a jó helyre került! (5/5)';
+    res.className = 'result correct';
+  } else {
+    res.textContent = `Jelenleg ${correct}/${zones.length} réteg van jó helyen. Próbáld javítani!`;
+    res.className = 'result incorrect';
+  }
+  updateFinalCode();
+}
+
+function checkGases() {
+  const res = document.getElementById('gases-result');
+
+  const n2raw = document.getElementById('n2').value.trim();
+  const o2raw = document.getElementById('o2').value.trim();
+  const arraw = document.getElementById('ar').value.trim();
+  const co2raw = document.getElementById('co2').value.trim();
+
+  if (!n2raw || !o2raw || !arraw || !co2raw) {
+    res.textContent = 'Először töltsd ki mind a négy gáz mezőjét, utána tudom ellenőrizni.';
+    res.className = 'result incorrect';
+    return;
+  }
+  const n2 = readVal('n2');
+  const o2 = readVal('o2');
+  const ar = readVal('ar');
+  const co2 = readVal('co2');
+  
+  let correctCount = 0;
+  if (n2 === 78)    correctCount++;
+  if (o2 === 21)    correctCount++;
+  if (ar === 0.9)   correctCount++;
+  if (co2 === 0.04) correctCount++;
+
+  if (correctCount === 4) {
+    res.textContent = 'Szép! A fő gázok arányát jól adtad meg. (4/4)';
+    res.className = 'result correct';
+  } else {
+    res.textContent = `Jelenleg ${correctCount}/4 gáz aránya megfelelő. Gondold át még egyszer! `;
+    res.className = 'result incorrect';
+  }
+  updateSum();
+  updateFinalCode();
+}
+
+function checkQuiz() {
+  const res = document.getElementById('quiz-result');
+
+  // minden kérdésnél van‑e választás?
+  let allAnswered = true;
+  quizData.forEach(q => {
+    const el = document.getElementById(q.id);
+    if (!el || el.value === '') {
+      allAnswered = false;
+    }
+  });
+
+  if (!allAnswered) {
+    res.textContent = 'Először minden kérdéshez válassz réteget, utána tudom ellenőrizni.';
+    res.className = 'result incorrect';
+    return;
+  }
+
+  // INNENTŐL a régi logika
+  let correct = 0;
+  quizData.forEach(q => {
+    const el = document.getElementById(q.id);
+    if (el && el.value === q.answer) correct++;
+  });
+  if (correct === quizData.length) {
+    res.textContent = 'Minden állítást a megfelelő réteghez kapcsoltál! (4/4)';
+    res.className = 'result correct';
+  } else {
+    res.textContent = `${correct}/${quizData.length} jó válaszod van. Próbáld javítani!`;
+    res.className = 'result incorrect';
+  }
+  updateFinalCode();
+}
+
+function updateFinalCode() {
+  const next = document.getElementById('next-link');
+  const spot = document.getElementById('spotify-code');
+
+  const good1 = document.getElementById('layers-result').classList.contains('correct');
+  const good2 = document.getElementById('gases-result').classList.contains('correct');
+  const good3 = document.getElementById('quiz-result').classList.contains('correct');
+
+  const allGood = good1 && good2 && good3;
+
+  if (allGood) {
+    if (next) {
+      next.innerHTML = '<a href="2_felmelegedes.html">2. állomás – Levegő felmelegedése</a>';
+    }
+    if (spot) {
+      spot.textContent = '';
+      // Ha később szeretnél kódot, IDE fogsz beírni valamit, pl.:
+      // spot.textContent = 'Kód: ...';
+    }
+  } else {
+    if (next) next.textContent = '';
+    if (spot) spot.textContent = '';
+  }
+}
+
+window.addEventListener('load', () => {
+  initLayerPoolOrder();   // 1. feladat elemeinek keverése
+  addDnD();               // drag&drop bekapcsolása
+  renderQuiz();           // 3. feladat kérdéseinek kirajzolása
+  ['n2','o2','ar','co2'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateSum);
+  });
+  updateSum();            // 2. feladat összeg kijelzése induláskor
+});
+</script>
+
+<script src="DragDropTouch.js"></script>
+
+</body>
+</html>

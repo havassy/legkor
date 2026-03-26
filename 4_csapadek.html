@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <title>4. állomás – Csapadék</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background:#f5f8ff; display:flex; justify-content:center; }
+    .wrapper { max-width: 780px; width: 100%; }
+    h1, h2 { color:#173a6b; }
+    .card { background:white; border-radius:8px; padding:16px; margin-bottom:16px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    .label { font-weight:bold; margin-bottom:4px; }
+    .items { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+	    /* Hogy a 2. feladat kiinduló helye akkor is látszódjon, ha üres */
+    #ptype-pool {  min-height: 60px; border: 2px dashed #b5c7ff; border-radius: 6px; padding: 6px; background:#f9fbff; }
+    .item { padding:6px 10px; background:#e3ecff; border-radius:4px; cursor:grab; user-select:none; font-size:0.9rem; }
+    .sequence { display:flex; flex-direction:column; gap:8px; }
+    .seq-slot { min-height:40px; border:2px dashed #b5c7ff; border-radius:6px; padding:4px 6px; background:#f9fbff; font-size:0.9rem; display:flex; align-items:center; }
+    .buckets { display:flex; flex-wrap:wrap; gap:10px; }
+    .bucket { flex:1 1 220px; min-height:80px; border:2px dashed #b5c7ff; border-radius:6px; padding:6px; background:#f9fbff; display:flex; flex-direction:column; gap:4px; }
+    .bucket-title { font-weight:bold; margin-bottom:4px; font-size:0.9rem; }
+    .bucket.filled { border-style:solid; background:#f0f4ff; }
+    .mountain-wrapper { display:flex; gap:16px; justify-content:space-between; }
+    .mountain-side { flex:1 1 45%; min-height:120px; border:2px dashed #b5c7ff; border-radius:6px; padding:6px; background:#f9fbff; display:flex; flex-direction:column; gap:4px; }
+    .mountain-title { font-weight:bold; margin-bottom:4px; font-size:0.9rem; }
+    button { padding:8px 14px; margin-top:10px; border:none; border-radius:4px; background:#173a6b; color:white; cursor:pointer; font-size:0.9rem; }
+    .result { margin-top:8px; font-weight:bold; font-size:0.9rem; }
+    .correct { color:green; }
+    .incorrect { color:#b00020; }
+    svg { width:100%; max-height:160px; margin-bottom:8px; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+<h1>4. állomás – Csapadék</h1>
+<p>A csapadékképződés lépései, a csapadékfajták rendszerezése és a hegységek éghajlatválasztó szerepe. Ha minden válaszod helyes, megkapod a következő állomás <strong>linkjét</strong>.</p>
+
+<div class="card" id="precip-steps-card">
+  <h2>1. feladat – Csapadékképződés</h2>
+  <p>Rendezd sorrendbe a csapadékképződés fő lépéseit! Az 1. helyre kerüljön, ami legelőször történik.</p>
+  <div class="label">Húzható elemek</div>
+  <div class="items" id="step-pool"></div>
+  <div class="label" style="margin-top:8px;">Lépések sorrendben</div>
+  <div class="sequence" id="step-slots">
+    <div class="seq-slot" data-pos="1">1.</div>
+    <div class="seq-slot" data-pos="2">2.</div>
+    <div class="seq-slot" data-pos="3">3.</div>
+    <div class="seq-slot" data-pos="4">4.</div>
+    <div class="seq-slot" data-pos="5">5.</div>
+  </div>
+  <button onclick="checkSteps()">Ellenőrzés</button>
+  <div class="result" id="steps-result"></div>
+</div>
+
+<div class="card" id="precip-types-card">
+  <h2>2. feladat – Csapadékfajták rendszerezése</h2>
+  <p>Húzd a csapadékfajtákat a megfelelő kosárba: <strong>hulló csapadék</strong> vagy <strong>talajmenti csapadék</strong>!</p>
+  <div class="label">Húzható elemek</div>
+  <div class="items" id="ptype-pool"></div>
+  <div class="buckets">
+    <div class="bucket" data-type="hulló">
+      <div class="bucket-title">Hulló csapadék</div>
+    </div>
+    <div class="bucket" data-type="talajmenti">
+      <div class="bucket-title">Talajmenti csapadék</div>
+    </div>
+  </div>
+  <button onclick="checkPtypes()">Ellenőrzés</button>
+  <div class="result" id="ptypes-result"></div>
+</div>
+
+<div class="card" id="mountain-card">
+  <h2>3. feladat – Hegységek éghajlatválasztó szerepe</h2>
+  <p>Az ábrán a nedves levegő balról jobbra halad át egy hegységen. Húzd a jellemzőket a <strong>szél felőli oldalra</strong> vagy a <strong>szélárnyékos oldalra</strong>!</p>
+  <svg viewBox="0 0 300 120" aria-hidden="true">
+    <defs>
+      <linearGradient id="mountainGrad" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#cfd8e6" />
+        <stop offset="100%" stop-color="#9faac4" />
+      </linearGradient>
+    </defs>
+    <path d="M0 100 L80 60 L150 20 L220 70 L300 100 Z" fill="url(#mountainGrad)" stroke="#777" />
+    <text x="20" y="20" font-size="10">Nedves levegő, tenger felől</text>
+    <text x="15" y="105" font-size="10">Szél felőli oldal</text>
+    <text x="210" y="105" font-size="10">Szélárnyékos oldal</text>
+    <path d="M10 40 C40 35 70 30 100 28" stroke="#2b5ea8" stroke-width="2" fill="none" marker-end="url(#arrow)" />
+  </svg>
+  <svg width="0" height="0">
+    <defs>
+      <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L6,3 z" fill="#2b5ea8" />
+      </marker>
+    </defs>
+  </svg>
+
+  <div class="label">Húzható jellemzők</div>
+  <div class="items" id="mountain-pool"></div>
+  <div class="mountain-wrapper">
+    <div class="mountain-side" data-side="windward">
+      <div class="mountain-title">Szél felőli oldal</div>
+    </div>
+    <div class="mountain-side" data-side="leeward">
+      <div class="mountain-title">Szélárnyékos oldal</div>
+    </div>
+  </div>
+  <button onclick="checkMountain()">Ellenőrzés</button>
+  <div class="result" id="mountain-result"></div>
+</div>
+
+<div class="card" id="next-card">
+  <h2>Következő állomás</h2>
+  <p></p>
+  <div class="result" id="next-link"></div>
+  <div class="result" id="spotify-code"></div>
+</div>
+
+
+<script>
+let dragged = null;
+
+// 1. feladat – csapadékképződés lépései
+const precipSteps = [
+  {key: 'rise', text: 'A levegő felemelkedik.', pos: 1},
+  {key: 'cool', text: 'A levegő tágul és lehűl.', pos: 2},
+  {key: 'saturation', text: 'Harmatpont: a levegő vízgőzzel telített lesz (100% relatív páratartalom).', pos: 3},
+  {key: 'condense', text: 'Kondenzáció: felhőképződés, vízcseppek/jégkristályok kialakulása.', pos: 4},
+  {key: 'fall', text: 'Csapadék: a cseppek/jégkristályok megnőnek és lehullanak.', pos: 5}
+];
+
+// 2. feladat – csapadékfajták hulló / talajmenti
+const precipTypes = [
+  {key: 'eso', text: 'Eső', type: 'hulló'},
+  {key: 'zapor', text: 'Zápor', type: 'hulló'},
+  {key: 'zivatar', text: 'Zivatar', type: 'hulló'},
+  {key: 'ho', text: 'Havazás', type: 'hulló'},
+  {key: 'onos_eso', text: 'Ónos eső', type: 'hulló'},
+  {key: 'jegeso', text: 'Jégeső', type: 'hulló'},
+  {key: 'kod', text: 'Köd', type: 'talajmenti'},
+  {key: 'der', text: 'Dér', type: 'talajmenti'},
+  {key: 'zuzmara', text: 'Zúzmara', type: 'talajmenti'}
+];
+
+// 3. feladat – hegységek jellemzői
+const mountainItems = [
+  {key: 'wet', text: 'Sok csapadék, gyakori felhőzet.', side: 'windward'},
+  {key: 'lush', text: 'Dús, zöld növényzet.', side: 'windward'},
+  {key: 'cool', text: 'Hűvösebb, nedvesebb levegő.', side: 'windward'},
+  {key: 'dry', text: 'Száraz, leszálló levegő.', side: 'leeward'},
+  {key: 'rain_shadow', text: 'Esőárnyék: kevés csapadék.', side: 'leeward'},
+  {key: 'steppe', text: 'Félsivatagos, sztyeppes táj.', side: 'leeward'}
+];
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+function createItem(text, key) {
+  const div = document.createElement('div');
+  div.className = 'item';
+  div.textContent = text;
+  div.draggable = true;
+  div.dataset.key = key;
+  div.addEventListener('dragstart', e => {
+    dragged = div;
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  return div;
+}
+
+function setupSteps() {
+  const pool = document.getElementById('step-pool');
+  const arr = precipSteps.slice();
+  shuffle(arr);
+  pool.innerHTML = '';
+  arr.forEach(obj => pool.appendChild(createItem(obj.text, obj.key)));
+}
+
+function setupPtypes() {
+  const pool = document.getElementById('ptype-pool');
+  const arr = precipTypes.slice();
+  shuffle(arr);
+  pool.innerHTML = '';
+  arr.forEach(obj => pool.appendChild(createItem(obj.text, obj.key)));
+}
+
+function setupMountain() {
+  const pool = document.getElementById('mountain-pool');
+  const arr = mountainItems.slice();
+  shuffle(arr);
+  pool.innerHTML = '';
+  arr.forEach(obj => pool.appendChild(createItem(obj.text, obj.key)));
+}
+
+function addDnD() {
+  const stepPool = document.getElementById('step-pool');
+  const ptypePool = document.getElementById('ptype-pool');
+  const mountainPool = document.getElementById('mountain-pool');
+
+  // Minden item legyen húzható
+  document.querySelectorAll('.item').forEach(el => {
+    el.addEventListener('dragstart', e => {
+      dragged = el;
+      e.dataTransfer.effectAllowed = 'move';
+    });
+  });
+
+  // Minden releváns zóna + mindhárom pool drop-zóna
+  document.querySelectorAll(
+    '.seq-slot, .bucket, .mountain-side, #step-pool, #ptype-pool, #mountain-pool'
+  ).forEach(zone => {
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+    });
+
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!dragged) return;
+
+      if (zone.classList.contains('seq-slot')) {
+        // 1. feladat: ha már volt benne elem, visszadobjuk a step-poolba
+        const existing = zone.querySelector('.item');
+        if (existing) {
+          stepPool.appendChild(existing);
+        }
+        zone.appendChild(dragged);
+
+      } else if (zone.classList.contains('bucket')) {
+        // 2. feladat: bármelyik kosárba lehet tenni
+        zone.appendChild(dragged);
+
+      } else if (zone.classList.contains('mountain-side')) {
+        // 3. feladat: hegyoldalak
+        zone.appendChild(dragged);
+
+      } else if (zone.id === 'step-pool') {
+        // 1. feladat: visszapakolás a kiinduló helyre
+        stepPool.appendChild(dragged);
+
+      } else if (zone.id === 'ptype-pool') {
+        // 2. feladat: visszapakolás a kiinduló helyre (Zivatar is ide jöhet vissza)
+        ptypePool.appendChild(dragged);
+
+      } else if (zone.id === 'mountain-pool') {
+        // 3. feladat: visszapakolás a kiinduló helyre
+        mountainPool.appendChild(dragged);
+      }
+
+      zone.classList.add('filled');
+      dragged = null;
+    });
+  });
+}
+
+function checkSteps() {
+  const res = document.getElementById('steps-result');
+
+  // Először: van-e még elem a kiinduló mezőben?
+  const pool = document.getElementById('step-pool');
+  const remaining = pool.querySelectorAll('.item').length;
+  if (remaining > 0) {
+    res.textContent = 'Először húzd be az összes lépést valamelyik sorszámhoz, utána tudom ellenőrizni.';
+    res.className = 'result incorrect';
+    return;
+  }
+
+  // INNENTŐL a régi logika
+  let correct = 0;
+  const posMap = {};
+  precipSteps.forEach(s => { posMap[s.key] = s.pos; });
+  document.querySelectorAll('#step-slots .seq-slot').forEach(slot => {
+    const item = slot.querySelector('.item');
+    if (!item) return;
+    const key = item.dataset.key;
+    const shouldPos = posMap[key];
+    const thisPos = parseInt(slot.dataset.pos, 10);
+    if (shouldPos === thisPos) correct++;
+  });
+  const total = precipSteps.length;
+  if (correct === total) {
+    res.textContent = 'A csapadékképződés lépéseit helyes sorrendbe raktad! (' + correct + '/' + total + ')';
+    res.className = 'result correct';
+  } else {
+    res.textContent = 'Jelenleg ' + correct + '/' + total + ' lépés van jó helyen. Próbáld javítani!';
+    res.className = 'result incorrect';
+  }
+  updateFinalCode();
+}
+
+function checkPtypes() {
+  const res = document.getElementById('ptypes-result');
+
+  const specialKey = 'zivatar';      // ezt NEM kell besorolni
+
+  // Először: maradt-e még ÉRTÉKELENDŐ elem a kiinduló helyen?
+  const pool = document.getElementById('ptype-pool');
+  const remainingNonSpecial = Array.from(pool.querySelectorAll('.item'))
+    .filter(it => it.dataset.key !== specialKey)
+    .length;
+
+  if (remainingNonSpecial > 0) {
+    res.textContent = 'Először pakold be az összes csapadékfajtát valamelyik kosárba (a zivatart NEM kell), utána tudom ellenőrizni.';
+    res.className = 'result incorrect';
+    return;
+  }
+
+  // 1) Alapadatok
+  const map = {};
+  precipTypes.forEach(p => { map[p.key] = p.type; });
+
+  const totalWithoutSpecial = precipTypes.length - 1; // 9 - 1 = 8 értékelendő elem
+
+  let correct = 0;
+  let specialInBucket = false;
+
+  // 2) Végignézzük a kosarak tartalmát
+  document.querySelectorAll('#precip-types-card .bucket').forEach(bucket => {
+    const type = bucket.dataset.type;
+    bucket.querySelectorAll('.item').forEach(it => {
+      const key = it.dataset.key;
+      if (key === specialKey) {
+        // Ha a zivatar bármelyik kosárban benne van, azt hibának tekintjük
+        specialInBucket = true;
+      } else {
+        // Csak a valódi csapadékfajtákat pontozzuk
+        if (map[key] === type) correct++;
+      }
+    });
+  });
+
+  // 3) Ha a zivatar kosárba került, egyet levonunk a pontszámból
+  if (specialInBucket && correct > 0) {
+    correct--;
+  }
+
+  // 4) Visszajelzés
+  if (correct === totalWithoutSpecial && !specialInBucket) {
+    res.textContent = '8/8 jó válaszod van.';
+    res.className = 'result correct';
+  } else {
+    res.textContent = 'Jelenleg ' + correct + '/' + totalWithoutSpecial + ' csapadékfajta van jó helyen. Gondold át még egyszer!';
+    res.className = 'result incorrect';
+  }
+
+  updateFinalCode();
+}
+
+function checkMountain() {
+  const res = document.getElementById('mountain-result');
+
+  // Először: maradt-e elem a kiinduló helyen?
+  const pool = document.getElementById('mountain-pool');
+  const remaining = pool.querySelectorAll('.item').length;
+  if (remaining > 0) {
+    res.textContent = 'Először pakold be az összes jellemzőt valamelyik oldalra, utána tudom ellenőrizni.';
+    res.className = 'result incorrect';
+    return;
+  }
+
+  // INNENTŐL a régi logika
+  let correct = 0;
+  const map = {};
+  mountainItems.forEach(m => { map[m.key] = m.side; });
+  const total = mountainItems.length;
+  document.querySelectorAll('#mountain-card .mountain-side').forEach(sideDiv => {
+    const side = sideDiv.dataset.side;
+    sideDiv.querySelectorAll('.item').forEach(it => {
+      const key = it.dataset.key;
+      if (map[key] === side) correct++;
+    });
+  });
+
+  if (correct === total) {
+    res.textContent = 'Jól szétválogattad a szél felőli és szélárnyékos oldal jellemzőit! (' + correct + '/' + total + ')';
+    res.className = 'result correct';
+  } else {
+    res.textContent = 'Jelenleg ' + correct + '/' + total + ' jellemző van jó oldalon. Próbáld javítani!';
+    res.className = 'result incorrect';
+  }
+  updateFinalCode();
+}
+
+function updateFinalCode() {
+  const next = document.getElementById('next-link');
+  const spot = document.getElementById('spotify-code');
+
+  const good1 = document.getElementById('steps-result').classList.contains('correct');
+  const good2 = document.getElementById('ptypes-result').classList.contains('correct');
+  const good3 = document.getElementById('mountain-result').classList.contains('correct');
+
+  const allGood = good1 && good2 && good3;
+
+  if (allGood) {
+    if (next) {
+      next.innerHTML = '<a href="5_legorvenyek.html">5. állomás – Légörvények</a>';
+    }
+    if (spot) {
+      // Alapból ne írjon ki semmit:
+      spot.textContent = '';
+      // Ha később szeretnél kódot, IDE fogsz beírni valamit, pl.:
+      // spot.textContent = 'Kód: IDE_IRHATOD_A_4._ÁLLOMÁS_ZENE_KÓDJÁT';
+    }
+  } else {
+    if (next) next.textContent = '';
+    if (spot) spot.textContent = '';
+  }
+}
+
+window.addEventListener('load', () => {
+  setupSteps();
+  setupPtypes();
+  setupMountain();
+  addDnD();
+});
+</script>
+
+<script src="DragDropTouch.js"></script>
+
+</body>
+</html>

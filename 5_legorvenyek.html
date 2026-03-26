@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <title>5. állomás – Légörvények</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background:#f5f8ff; display:flex; justify-content:center; }
+    .wrapper { max-width: 780px; width: 100%; }
+    h1, h2 { color:#173a6b; }
+    .card { background:white; border-radius:8px; padding:16px; margin-bottom:16px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    .label { font-weight:bold; margin-bottom:4px; }
+    .items { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+    .item { padding:6px 10px; background:#e3ecff; border-radius:4px; cursor:grab; user-select:none; font-size:0.9rem; }
+    .buckets { display:flex; flex-wrap:wrap; gap:10px; }
+    .bucket { flex:1 1 220px; min-height:80px; border:2px dashed #b5c7ff; border-radius:6px; padding:6px; background:#f9fbff; display:flex; flex-direction:column; gap:4px; }
+    .bucket-title { font-weight:bold; margin-bottom:4px; font-size:0.9rem; }
+    .bucket.filled { border-style:solid; background:#f0f4ff; }
+    table { border-collapse:collapse; width:100%; font-size:0.9rem; }
+    th, td { border:1px solid #c3d0f0; padding:6px; text-align:center; }
+    th { background:#e3ecff; }
+    select { width:95%; }
+    button { padding:8px 14px; margin-top:10px; border:none; border-radius:4px; background:#173a6b; color:white; cursor:pointer; font-size:0.9rem; }
+    .result { margin-top:8px; font-weight:bold; font-size:0.9rem; }
+    .correct { color:green; }
+    .incorrect { color:#b00020; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+<h1>5. állomás – Légörvények</h1>
+<p>Három feladatban gyakorolod a légörvények típusait, a mérsékelt övi ciklon mozgásait és hatását az időjárásra. Ha minden válaszod helyes, megkapod a következő állomás <strong>linkjét</strong>.</p>
+
+<div class="card" id="vortex-types-card">
+  <h2>1. feladat – Légörvények csoportosítása</h2>
+  <p>Húzd a légörvények neveit a megfelelő csoportba: <strong>forró övezeti légörvények</strong> vagy <strong>mérsékelt övezeti légörvények</strong>!</p>
+  <div class="label">Húzható elemek</div>
+  <div class="items" id="vortex-pool"></div>
+  <div class="buckets">
+    <div class="bucket" data-type="forro">
+      <div class="bucket-title">Forró övezeti légörvények</div>
+    </div>
+    <div class="bucket" data-type="mersekelt">
+      <div class="bucket-title">Mérsékelt övezeti légörvények</div>
+    </div>
+  </div>
+  <button onclick="checkVortices()">Ellenőrzés</button>
+  <div class="result" id="vortex-result"></div>
+</div>
+
+<div class="card" id="motions-card">
+  <h2>2. feladat – Mérsékelt övi ciklon mozgásai</h2>
+  <p>Válaszolj a kérdésekre a mérsékelt övi ciklon haladó, forgó és függőleges mozgásáról!</p>
+  <ol>
+    <li class="label">Melyik irányba vonul általában a mérsékelt övi ciklon az északi féltekén?</li>
+    <select id="q-move"></select>
+    <li class="label" style="margin-top:10px;">Hogyan forog a levegő a ciklon középpontja körül az északi féltekén?</li>
+    <select id="q-rotate"></select>
+    <li class="label" style="margin-top:10px;">Milyen függőleges légmozgás jellemző a ciklon központjában?</li>
+    <select id="q-vertical"></select>
+    <li class="label" style="margin-top:10px;">Milyen időjárás jellemző a ciklon középpontja környékén?</li>
+    <select id="q-weather"></select>
+  </ol>
+  <button onclick="checkMotions()">Ellenőrzés</button>
+  <div class="result" id="motions-result"></div>
+</div>
+
+<div class="card" id="effects-card">
+  <h2>3. feladat – Ciklonos és anticiklonos időjárás Magyarországon</h2>
+  <p>Húzd a helyzetleírásokat a megfelelő oszlopba aszerint, hogy <strong>ciklonos</strong> vagy <strong>anticiklonos</strong> időjárásra jellemzők‑e!</p>
+  <div class="label">Húzható elemek</div>
+  <div class="items" id="effect-pool"></div>
+  <div class="buckets">
+    <div class="bucket" data-type="ciklonos">
+      <div class="bucket-title">Ciklonos időjárás</div>
+    </div>
+    <div class="bucket" data-type="anticiklonos">
+      <div class="bucket-title">Anticiklonos időjárás</div>
+    </div>
+  </div>
+  <button onclick="checkEffects()">Ellenőrzés</button>
+  <div class="result" id="effects-result"></div>
+</div>
+
+<div class="card" id="next-card">
+  <h2>Következő állomás</h2>
+  <p></p>
+  <div class="result" id="next-link"></div>
+  <div class="result" id="spotify-code"></div>
+</div>
+
+</div>
+
+<script>
+let dragged = null;
+
+// 1. feladat – forró vs mérsékelt övezeti légörvények
+const vortexItems = [
+  {key: 'hurrikan', text: 'Hurrikán', zone: 'forro'},
+  {key: 'tajfun', text: 'Tájfun', zone: 'forro'},
+  {key: 'ciklon', text: 'Ciklon', zone: 'mersekelt'},
+  {key: 'anticiklon', text: 'Anticiklon', zone: 'mersekelt'},
+  {key: 'tornado', text: 'Tornádó', zone: 'mersekelt'}
+];
+
+// 3. feladat – ciklonos vs anticiklonos helyzetek (változatlan)
+const effectItems = [
+  {key: 'oszi_borult', text: 'Tartós, napokon át tartó borult, esős, szeles ősz.', type: 'ciklonos'},
+  {key: 'hidegfront', text: 'Gyorsan átvonuló hidegfront záporokkal, erős széllel.', type: 'ciklonos'},
+  {key: 'tavaszi_valtozekony', text: 'Változékony tavaszi idő: gyakori frontátvonulásokkal.', type: 'ciklonos'},
+  {key: 'teli_anticiklon', text: 'Tartós, derült, hideg, szélcsendes téli idő, ködös medencékkel.', type: 'anticiklonos'},
+  {key: 'nyari_hullam', text: 'Nyári hőhullám, kánikula, alig van felhő.', type: 'anticiklonos'},
+  {key: 'derult_nyugodt', text: 'Napos, nyugodt, csapadékmentes késő őszi napok.', type: 'anticiklonos'}
+];
+
+// 2. feladat – feleletválasztós kérdések (változatlan)
+const motionQuestions = {
+  move: {
+    selectId: 'q-move',
+    options: [
+      {value: 'nyugat-kelet', label: 'Nyugat felől kelet felé', correct: true},
+      {value: 'kelet-nyugat', label: 'Kelet felől nyugat felé', correct: false},
+      {value: 'eszak-del', label: 'Északról dél felé', correct: false},
+      {value: 'del-eszak', label: 'Délről észak felé', correct: false}
+    ]
+  },
+  rotate: {
+    selectId: 'q-rotate',
+    options: [
+      {value: 'be-ellentetes', label: 'Befelé, az óramutató járásával ellentétes irányban', correct: true},
+      {value: 'ki-egyezo', label: 'Kifelé, az óramutató járásával egyező irányban', correct: false},
+      {value: 'be-egyezo', label: 'Befelé, az óramutató járásával egyező irányban', correct: false},
+      {value: 'ki-ellentetes', label: 'Kifelé, az óramutató járásával ellentétes irányban', correct: false}
+    ]
+  },
+  vertical: {
+    selectId: 'q-vertical',
+    options: [
+      {value: 'felszallo', label: 'Felszálló levegő', correct: true},
+      {value: 'leszallo', label: 'Leszálló levegő', correct: false}
+    ]
+  },
+  weather: {
+    selectId: 'q-weather',
+    options: [
+      {value: 'felhos_csapadekos', label: 'Felhős, csapadékos, szeles idő', correct: true},
+      {value: 'derult_szeles', label: 'Derült, de szeles idő', correct: false},
+      {value: 'derult_szelescsendes', label: 'Derült, nyugodt idő', correct: false},
+      {value: 'nagyon_hideg_szaraz', label: 'Nagyon hideg, száraz idő', correct: false}
+    ]
+  }
+};
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+function createItem(text, key) {
+  const div = document.createElement('div');
+  div.className = 'item';
+  div.textContent = text;
+  div.draggable = true;
+  div.dataset.key = key;
+  div.addEventListener('dragstart', e => {
+    dragged = div;
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  return div;
+}
+
+function setupVortices() {
+  const pool = document.getElementById('vortex-pool');
+  const arr = vortexItems.slice();
+  shuffle(arr);
+  pool.innerHTML = '';
+  arr.forEach(obj => pool.appendChild(createItem(obj.text, obj.key)));
+}
+
+function setupEffects() {
+  const pool = document.getElementById('effect-pool');
+  const arr = effectItems.slice();
+  shuffle(arr);
+  pool.innerHTML = '';
+  arr.forEach(obj => pool.appendChild(createItem(obj.text, obj.key)));
+}
+
+function setupMotionSelects() {
+  Object.values(motionQuestions).forEach(q => {
+    const select = document.getElementById(q.selectId);
+    const opts = q.options.slice();
+    shuffle(opts);
+    select.innerHTML = '';
+    const first = document.createElement('option');
+    first.value = '';
+    first.textContent = '-- válassz --';
+    select.appendChild(first);
+    opts.forEach(opt => {
+      const o = document.createElement('option');
+      o.value = opt.value;
+      o.textContent = opt.label;
+      if (opt.correct) {
+        o.dataset.correct = 'true';
+      }
+      select.appendChild(o);
+    });
+  });
+}
+
+function addDnD() {
+  document.querySelectorAll('.bucket').forEach(zone => {
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+    });
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!dragged) return;
+      zone.appendChild(dragged);
+      zone.classList.add('filled');
+      dragged = null;
+    });
+  });
+}
+
+function checkVortices() {
+  const res = document.getElementById('vortex-result');
+
+  // Először: maradt-e elem a kiinduló helyen?
+  const pool = document.getElementById('vortex-pool');
+  const remaining = pool.querySelectorAll('.item').length;
+  if (remaining > 0) {
+    res.textContent = 'Először pakold be az összes légörvényt valamelyik kosárba, utána tudom ellenőrizni.';
+    res.className = 'result incorrect';
+    return;
+  }
+
+  // INNENTŐL a régi logika
+  let correct = 0;
+  const map = {};
+  vortexItems.forEach(v => { map[v.key] = v.zone; });
+  const total = vortexItems.length;
+
+  document.querySelectorAll('#vortex-types-card .bucket').forEach(bucket => {
+    const zone = bucket.dataset.type;
+    bucket.querySelectorAll('.item').forEach(it => {
+      const key = it.dataset.key;
+      if (map[key] === zone) correct++;
+    });
+  });
+
+  if (correct === total) {
+    res.textContent = 'Minden légörvényt jó övezethez soroltál! (' + correct + '/' + total + ')';
+    res.className = 'result correct';
+  } else {
+    res.textContent = 'Jelenleg ' + correct + '/' + total + ' légörvényt soroltál jó övezethez. Próbáld javítani!';
+    res.className = 'result incorrect';
+  }
+  updateFinalCode();
+}
+
+function checkMotions() {
+  const res = document.getElementById('motions-result');
+  const selectMove = document.getElementById('q-move');
+  const selectRotate = document.getElementById('q-rotate');
+  const selectVert = document.getElementById('q-vertical');
+  const selectWea = document.getElementById('q-weather');
+
+  // először: minden kérdésnél van-e választás?
+  if (!selectMove.value || !selectRotate.value || !selectVert.value || !selectWea.value) {
+    res.textContent = 'Először mind a négy kérdésre válassz egy lehetőséget, utána tudom ellenőrizni.';
+    res.className = 'result incorrect';
+    return;
+  }
+
+  // INNENTŐL a régi logika
+  let correct = 0;
+
+  if (selectMove.selectedOptions[0].dataset.correct === 'true')    correct++;
+  if (selectRotate.selectedOptions[0].dataset.correct === 'true') correct++;
+  if (selectVert.selectedOptions[0].dataset.correct === 'true')   correct++;
+  if (selectWea.selectedOptions[0].dataset.correct === 'true')    correct++;
+
+  const total = 4;
+  if (correct === total) {
+    res.textContent = 'A mérsékelt övi ciklon mozgásait és időjárását jól jellemezted! (' + correct + '/' + total + ')';
+    res.className = 'result correct';
+  } else {
+    res.textContent = 'Jelenleg ' + correct + '/' + total + ' válaszod helyes. Próbáld javítani!';
+    res.className = 'result incorrect';
+  }
+  updateFinalCode();
+}
+
+function checkEffects() {
+  const res = document.getElementById('effects-result');
+
+  // Először: maradt-e elem a kiinduló helyen?
+  const pool = document.getElementById('effect-pool');
+  const remaining = pool.querySelectorAll('.item').length;
+  if (remaining > 0) {
+    res.textContent = 'Először pakold be az összes helyzetleírást valamelyik oszlopba, utána tudom ellenőrizni.';
+    res.className = 'result incorrect';
+    return;
+  }
+
+  // INNENTŐL a régi logika
+  let correct = 0;
+  const map = {};
+  effectItems.forEach(eff => { map[eff.key] = eff.type; });
+  const total = effectItems.length;
+
+  document.querySelectorAll('#effects-card .bucket').forEach(bucket => {
+    const type = bucket.dataset.type;
+    bucket.querySelectorAll('.item').forEach(it => {
+      const key = it.dataset.key;
+      if (map[key] === type) correct++;
+    });
+  });
+
+  if (correct === total) {
+    res.textContent = 'Minden helyzetleírást jó oszlopba raktál! (' + correct + '/' + total + ')';
+    res.className = 'result correct';
+  } else {
+    res.textContent = 'Jelenleg ' + correct + '/' + total + ' helyzetleírás van jó helyen. Gondold át még egyszer!';
+    res.className = 'result incorrect';
+  }
+  updateFinalCode();
+}
+
+function updateFinalCode() {
+  const next = document.getElementById('next-link');
+  const spot = document.getElementById('spotify-code');
+
+  const good1 = document.getElementById('vortex-result').classList.contains('correct');
+  const good2 = document.getElementById('motions-result').classList.contains('correct');
+  const good3 = document.getElementById('effects-result').classList.contains('correct');
+
+  const allGood = good1 && good2 && good3;
+
+  if (allGood) {
+    if (next) {
+      next.innerHTML = '<a href="6_frontok.html">6. állomás – Időjárási frontok</a>';
+    }
+    if (spot) {
+      // Alapból ne írjon ki semmit:
+      spot.textContent = '';
+      // Ha később szeretnél kódot, IDE fogsz beírni valamit, pl.:
+      // spot.textContent = 'Kód: IDE_IRHATOD_A_5._ÁLLOMÁS_ZENE_KÓDJÁT';
+    }
+  } else {
+    if (next) next.textContent = '';
+    if (spot) spot.textContent = '';
+  }
+}
+
+window.addEventListener('load', () => {
+  setupVortices();
+  setupEffects();
+  setupMotionSelects();
+  addDnD();
+});
+</script>
+
+<script src="DragDropTouch.js"></script>
+
+</body>
+</html>

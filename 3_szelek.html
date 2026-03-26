@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <title>3. állomás – Globális szelek</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background:#f5f8ff; display:flex; justify-content:center; }
+    .wrapper { max-width: 900px; width: 100%; }
+    h1, h2 { color:#173a6b; }
+    .card { background:white; border-radius:8px; padding:16px; margin-bottom:16px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    .label { font-weight:bold; margin-bottom:4px; }
+    table { border-collapse:collapse; width:100%; font-size:0.9rem; }
+    th, td { border:1px solid #c3d0f0; padding:6px; text-align:center; }
+    th { background:#e3ecff; }
+    select { width:95%; }
+    button { padding:8px 14px; margin-top:10px; border:none; border-radius:4px; background:#173a6b; color:white; cursor:pointer; font-size:0.9rem; }
+    .result { margin-top:8px; font-weight:bold; font-size:0.9rem; }
+    .correct { color:green; }
+    .incorrect { color:#b00020; }
+
+    /* 2. feladat – földgömb és dropzónák */
+    .globe-wrapper { display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start; }
+    .globe { position:relative; width:360px; height:360px; border-radius:50%; border:3px solid #173a6b; background: radial-gradient(circle at 30% 30%, #e6f3ff, #bcd4f5); margin-bottom:8px; }
+    /* Alap középvonal-stílus */
+    .latitude-line {
+      position: absolute;
+      border-top: 2px dashed #173a6b;
+      opacity: 0.8;
+    }
+
+    /* Egyenlítő – leghosszabb */
+    .equator {
+      left: 0%;
+      right: 0%;
+      top: 50%;
+      border-top-style: solid;
+    }
+
+    /* Térítők – közepes hossz */
+    .tropic-n,
+    .tropic-s {
+      left: 2%;
+      right: 2%;
+    }
+    .tropic-n { top: 35%; }
+    .tropic-s { top: 65%; }
+
+    /* Sarkkörök – legrövidebbek */
+    .polar-n,
+    .polar-s {
+      left: 10%;
+      right: 10%;
+    }
+    .polar-n { top: 20%; }
+    .polar-s { top: 80%; }
+    .globe-label { position:absolute; left:12%; font-size:0.75rem; color:#173a6b; background:rgba(255,255,255,0.8); padding:1px 4px; border-radius:3px; }
+
+    .wind-zone { position:absolute; left:55%; right:5%; min-height:34px; border:2px dashed #b5c7ff; border-radius:6px; padding:2px 4px; background:#f9fbff; display:flex; align-items:center; justify-content:center; font-size:0.8rem; }
+    .wind-zone.filled { border-style:solid; background:#f0f4ff; }
+    /* Zónák: polár a sarkkör és pólus között, nyugati a térítő és sarkkör között, passzát az Egyenlítő és térítő között. Mindegyik egy kicsit a megfelelő szélességi körök KÖZÉ teszi a dobozt. */
+    .wind-zone.n-polar { top:5%; }
+    .wind-zone.n-west { top:22%; }
+    .wind-zone.n-pass { top:37%; }
+    .wind-zone.s-pass { top:52%; }
+    .wind-zone.s-west { top:67%; }
+    .wind-zone.s-polar { top:84%; }
+
+    .items { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+    .item { padding:6px 10px; background:#e3ecff; border-radius:4px; cursor:grab; user-select:none; font-size:0.9rem; }
+
+  </style>
+</head>
+<body>
+<div class="wrapper">
+<h1>3. állomás – Globális szelek</h1>
+<p>Két feladatban gyakorolod a globális szelek irányát és elhelyezését a Földön. Ha minden válaszod helyes, megkapod a következő állomás <strong>linkjét</strong>.</p>
+
+<!-- 1. feladat: táblázatos párosítás -->
+<div class="card">
+  <h2>1. feladat – Globális szelek táblázata</h2>
+  <p>Válaszd ki minden sornál, hogy melyik földrajzi övezetben jellemző és milyen irányú az adott globális szél!</p>
+  <table>
+    <tr>
+      <th>Globális szél</th>
+      <th>Övezet</th>
+      <th>Iránya</th>
+    </tr>
+    <tr>
+      <td>Passzát</td>
+      <td>
+        <select id="zone-passzat">
+          <option value="">-- válassz --</option>
+          <option value="forro">Forró övezet</option>
+          <option value="mersekelt">Mérsékelt övezet</option>
+          <option value="hideg">Hideg övezet</option>
+        </select>
+      </td>
+      <td>
+        <select id="dir-passzat">
+          <option value="">-- válassz --</option>
+          <option value="keleties">Keleties</option>
+          <option value="nyugatias">Nyugatias</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td>Nyugati szelek</td>
+      <td>
+        <select id="zone-nyugati">
+          <option value="">-- válassz --</option>
+          <option value="forro">Forró övezet</option>
+          <option value="mersekelt">Mérsékelt övezet</option>
+          <option value="hideg">Hideg övezet</option>
+        </select>
+      </td>
+      <td>
+        <select id="dir-nyugati">
+          <option value="">-- válassz --</option>
+          <option value="keleties">Keleties</option>
+          <option value="nyugatias">Nyugatias</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td>Sarki szelek</td>
+      <td>
+        <select id="zone-sarki">
+          <option value="">-- válassz --</option>
+          <option value="forro">Forró övezet</option>
+          <option value="mersekelt">Mérsékelt övezet</option>
+          <option value="hideg">Hideg övezet</option>
+        </select>
+      </td>
+      <td>
+        <select id="dir-sarki">
+          <option value="">-- válassz --</option>
+          <option value="keleties">Keleties</option>
+          <option value="nyugatias">Nyugatias</option>
+        </select>
+      </td>
+    </tr>
+  </table>
+  <button onclick="checkWinds()">Ellenőrzés</button>
+  <div class="result" id="winds-result"></div>
+</div>
+
+<!-- 2. feladat: elhelyezés a földgömbön -->
+<div class="card">
+  <h2>2. feladat – Globális szelek a Földön</h2>
+  <p>Húzd a szélrendszerek neveit a megfelelő övezetekbe a földgömbön!</p>
+
+  <div class="label">Húzható elemek</div>
+  <div class="items" id="wind-pool"></div>
+
+  <div class="globe-wrapper">
+    <div class="globe" id="globe">
+      <!-- szélességi körök -->
+      <div class="latitude-line polar-n"></div>
+      <div class="latitude-line tropic-n"></div>
+      <div class="latitude-line equator"></div>
+      <div class="latitude-line tropic-s"></div>
+      <div class="latitude-line polar-s"></div>
+
+      <!-- feliratok -->
+      <div class="globe-label" style="top:18%;">Északi-sarkkör</div>
+      <div class="globe-label" style="top:33%;">Ráktérítő</div>
+      <div class="globe-label" style="top:48%;">Egyenlítő</div>
+      <div class="globe-label" style="top:63%;">Baktérítő</div>
+      <div class="globe-label" style="top:78%;">Déli-sarkkör</div>
+
+      <!-- dropzónák: SEMLEGES feliratok, megoldás nélkül -->
+      <div class="wind-zone n-polar" data-type="sarki"></div>
+      <div class="wind-zone n-west" data-type="nyugati"></div>
+      <div class="wind-zone n-pass" data-type="passzát"></div>
+      <div class="wind-zone s-pass" data-type="passzát"></div>
+      <div class="wind-zone s-west" data-type="nyugati"></div>
+      <div class="wind-zone s-polar" data-type="sarki"></div>
+    </div>
+    <div style="flex:1 1 260px; font-size:0.9rem;">
+      <p></p>
+      <p></p>
+      <button onclick="checkGlobeWinds()">Ellenőrzés</button>
+      <div class="result" id="globe-result"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="next-card">
+  <h2>Következő állomás</h2>
+  <p></p>
+  <div class="result" id="next-link"></div>
+  <div class="result" id="spotify-code"></div>
+</div>
+
+</div>
+
+<script>
+// --- 1. feladat logika: véletlen sorrendű legördülők ---
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+const zones = [
+  { value: 'forro', label: 'Forró övezet' },
+  { value: 'mersekelt', label: 'Mérsékelt övezet' },
+  { value: 'hideg', label: 'Hideg övezet' }
+];
+
+const dirs = [
+  { value: 'keleties', label: 'Keleties' },
+  { value: 'nyugatias', label: 'Nyugatias' }
+];
+
+function fillSelectRandom(selectId, options) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+
+  sel.innerHTML = '';
+  const first = document.createElement('option');
+  first.value = '';
+  first.textContent = '-- válassz --';
+  sel.appendChild(first);
+
+  const opts = options.slice();
+  shuffle(opts);
+  opts.forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o.value;
+    opt.textContent = o.label;
+    sel.appendChild(opt);
+  });
+}
+
+function checkWinds() {
+  const res = document.getElementById('winds-result');
+
+  // először: minden legördülőben van‑e választás?
+  const selects = [
+    'zone-passzat', 'zone-nyugati', 'zone-sarki',
+    'dir-passzat',  'dir-nyugati',  'dir-sarki'
+  ];
+
+  let allAnswered = true;
+  selects.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el || el.value === '') {
+      allAnswered = false;
+    }
+  });
+
+  if (!allAnswered) {
+    res.textContent = 'Először minden legördülő listában válassz egy lehetőséget, utána tudom ellenőrizni.';
+    res.className = 'result incorrect';
+    return;
+  }
+
+  // INNENTŐL a régi logika
+  let correct = 0;
+  const total = 6; // 3 öv + 3 irány
+
+  if (document.getElementById('zone-passzat').value === 'forro')      correct++;
+  if (document.getElementById('zone-nyugati').value === 'mersekelt')  correct++;
+  if (document.getElementById('zone-sarki').value === 'hideg')        correct++;
+
+  if (document.getElementById('dir-passzat').value === 'keleties')    correct++;
+  if (document.getElementById('dir-nyugati').value === 'nyugatias')   correct++;
+  if (document.getElementById('dir-sarki').value === 'keleties')      correct++;
+
+  if (correct === total) {
+    res.textContent = 'Minden globális szelet jó övezetbe és jó iránytípushoz kapcsoltál! (6/6)';
+    res.className = 'result correct';
+  } else {
+    res.textContent = 'Jelenleg ' + correct + '/' + total + ' válaszod helyes. Gondold át még egyszer!';
+    res.className = 'result incorrect';
+  }
+  updateFinalCode();
+}
+
+// --- 2. feladat: drag and drop a földgömbön ---
+let dragged = null;
+
+const globeWindItems = [
+  { key: 'pass1', text: 'Passzát', type: 'passzát' },
+  { key: 'pass2', text: 'Passzát', type: 'passzát' },
+  { key: 'west1', text: 'Nyugati szelek', type: 'nyugati' },
+  { key: 'west2', text: 'Nyugati szelek', type: 'nyugati' },
+  { key: 'polar1', text: 'Sarki szelek', type: 'sarki' },
+  { key: 'polar2', text: 'Sarki szelek', type: 'sarki' }
+];
+
+function createWindItem(obj) {
+  const div = document.createElement('div');
+  div.className = 'item';
+  div.textContent = obj.text;
+  div.draggable = true;
+  div.dataset.type = obj.type;
+  div.addEventListener('dragstart', e => {
+    dragged = div;
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  return div;
+}
+
+function setupGlobeWinds() {
+  const pool = document.getElementById('wind-pool');
+  const arr = globeWindItems.slice();
+  shuffle(arr);
+  pool.innerHTML = '';
+  arr.forEach(obj => pool.appendChild(createWindItem(obj)));
+}
+
+function addGlobeDnD() {
+  const pool = document.getElementById('wind-pool');
+
+  document.querySelectorAll('.wind-zone').forEach(zone => {
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+    });
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!dragged) return;
+
+      // ha már van benne elem, azt visszadobjuk a poolba
+      const existing = zone.querySelector('.item');
+      if (existing) {
+        pool.appendChild(existing);
+      }
+
+      zone.appendChild(dragged);
+      zone.classList.add('filled');
+      dragged = null;
+    });
+  });
+
+  // pool is drop-zóna, ide is vissza lehet rakni bármit
+  pool.addEventListener('dragover', e => e.preventDefault());
+  pool.addEventListener('drop', e => {
+    e.preventDefault();
+    if (!dragged) return;
+    pool.appendChild(dragged);
+    dragged = null;
+  });
+}
+
+function checkGlobeWinds() {
+  const res = document.getElementById('globe-result');
+
+  // először: az összes szélrendszert elhelyezték‑e valamelyik zónába?
+  const pool = document.getElementById('wind-pool');
+  const remaining = pool.querySelectorAll('.item').length;
+  if (remaining > 0) {
+    res.textContent = 'Először húzd be az összes szélrendszert valamelyik övezetbe, utána tudom ellenőrizni.';
+    res.className = 'result incorrect';
+    return;
+  }
+
+  // INNENTŐL a régi logika
+  let correct = 0;
+  const totalNeeded = 6;
+
+  document.querySelectorAll('.wind-zone').forEach(zone => {
+    const needed = zone.dataset.type;
+    const child = zone.querySelector('.item');
+    if (child && child.dataset.type === needed) {
+      correct++;
+    }
+  });
+
+  if (correct === totalNeeded) {
+    res.textContent = 'Minden szélrendszert jó szélességi övhöz helyeztél a földgömbön! (6/6)';
+    res.className = 'result correct';
+  } else {
+    res.textContent = 'Jelenleg ' + correct + '/' + totalNeeded + ' szélrendszer van jó övben. Próbáld javítani!';
+    res.className = 'result incorrect';
+  }
+  updateFinalCode();
+}
+
+function updateFinalCode() {
+  const next = document.getElementById('next-link');
+  const spot = document.getElementById('spotify-code');
+
+  const good1 = document.getElementById('winds-result').classList.contains('correct');
+  const good2 = document.getElementById('globe-result').classList.contains('correct');
+
+  const allGood = good1 && good2;
+
+  if (allGood) {
+    if (next) {
+      next.innerHTML = '<a href="4_csapadek.html">4. állomás – Csapadék</a>';
+    }
+    if (spot) {
+      // Alapból ne írjon ki semmit:
+      spot.textContent = '';
+      // Ha később szeretnél kódot, IDE fogsz beírni valamit, pl.:
+      // spot.textContent = 'Kód: IDE_IRHATOD_A_3._ÁLLOMÁS_ZENE_KÓDJÁT';
+    }
+  } else {
+    if (next) next.textContent = '';
+    if (spot) spot.textContent = '';
+  }
+}
+
+window.addEventListener('load', () => {
+  fillSelectRandom('zone-passzat', zones);
+  fillSelectRandom('zone-nyugati', zones);
+  fillSelectRandom('zone-sarki', zones);
+  fillSelectRandom('dir-passzat', dirs);
+  fillSelectRandom('dir-nyugati', dirs);
+  fillSelectRandom('dir-sarki', dirs);
+
+  setupGlobeWinds();
+  addGlobeDnD();
+});
+</script>
+
+<script src="DragDropTouch.js"></script>
+
+</body>
+</html>
