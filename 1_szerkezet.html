@@ -242,6 +242,27 @@ function checkLayers() {
   updateFinalCode();
 }
 
+function readVal(id) {
+  const raw = document.getElementById(id).value.replace(',', '.');
+  const v = parseFloat(raw);
+  return isNaN(v) ? 0 : v;
+}
+
+function updateSum() {
+  const n2 = readVal('n2');
+  const o2 = readVal('o2');
+  const ar = readVal('ar');
+  const co2 = readVal('co2');
+  const sum = n2 + o2 + ar + co2;
+  const ind = document.getElementById('sum-indicator');
+  ind.textContent = 'Összesen: ' + sum.toFixed(2) + ' %';
+  if (sum > 100.01) {
+    ind.className = 'sum-indicator sum-high';
+  } else {
+    ind.className = 'sum-indicator sum-ok';
+  }
+}
+
 function checkGases() {
   const res = document.getElementById('gases-result');
 
